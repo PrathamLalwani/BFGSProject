@@ -1,12 +1,12 @@
 INFO:  latexindent version 3.24.4, 2024-07-18, a script to indent .tex files
        latexindent lives here: /usr/local/texlive/2024/texmf-dist/scripts/latexindent/
-       Wed Mar 26 13:53:43 2025
-       Filename: /home/pratham/School/Spring2025/MATH231/Project/main.tex
+       Wed Apr 16 14:35:51 2025
+       Filename: /home/pratham/templates/latex/preamble.tex
 INFO:  Processing switches:
        -s|--silent: Silent mode active (you have used either -s or --silent)
        -w|--overwrite: Overwrite mode active, will make a back up before overwriting
 INFO:  Directory for backup files and log file indent.log:
-       /home/pratham/School/Spring2025/MATH231/Project
+       /home/pratham/templates/latex
 INFO:  YAML settings read: defaultSettings.yaml
        Reading defaultSettings.yaml from /usr/local/texlive/2024/texmf-dist/scripts/latexindent/defaultSettings.yaml
 INFO:  YAML reading settings
@@ -14,14 +14,15 @@ INFO:  YAML reading settings
        latexindent.pl didn't find indentconfig.yaml or .indentconfig.yaml
        see all possible locations: https://latexindentpl.readthedocs.io/en/latest/sec-appendices.html#indentconfig-options)
 INFO:  Backup procedure (-w flag active):
-       Backing up /home/pratham/School/Spring2025/MATH231/Project/main.tex to /home/pratham/School/Spring2025/MATH231/Project/main.bak0...
-       /home/pratham/School/Spring2025/MATH231/Project/main.tex will be overwritten after indentation
+       /home/pratham/templates/latex/preamble.bak0 already exists, incrementing by 1 (see maxNumberOfBackUps)
+       Backing up /home/pratham/templates/latex/preamble.tex to /home/pratham/templates/latex/preamble.bak1...
+       /home/pratham/templates/latex/preamble.tex will be overwritten after indentation
 INFO:  Phase 1: searching for objects
 INFO:  Phase 2: finding surrounding indentation
 INFO:  Phase 3: indenting objects
 INFO:  Phase 4: final indentation check
 INFO:  Output routine:
-       Overwriting file /home/pratham/School/Spring2025/MATH231/Project/main.tex
+       Overwriting file /home/pratham/templates/latex/preamble.tex
        --------------
 INFO:  Please direct all communication/issues to:
         https://github.com/cmhughes/latexindent.pl
