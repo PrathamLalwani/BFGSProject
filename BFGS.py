@@ -2,6 +2,7 @@ import jax
 import jax.numpy as jnp
 
 
+jax.config.update("jax_enable_x64", True)
 def backtracking_line_search(f, x, p, grad_x, alpha=1.0, rho=0.8, c=9e-1):
     """
     Simple backtracking line search using the Armijo condition.
@@ -22,7 +23,7 @@ def backtracking_line_search(f, x, p, grad_x, alpha=1.0, rho=0.8, c=9e-1):
     return alpha
 
 
-def bfgs(f, x0, max_iter=100, tol=1e-6):
+def bfgs(f, x0, max_iter=100, tol=1e-15):
     """
     BFGS optimization using JAX.
 
@@ -38,7 +39,7 @@ def bfgs(f, x0, max_iter=100, tol=1e-6):
     Hinv = jnp.eye(n)
     # Function to compute the gradient using automatic differentiation.
     grad_f = jax.grad(f)
-
+    xs = jnp.zeros((max_iter, n))
     for i in range(max_iter):
         g = grad_f(x)
         # Check for convergence.
@@ -71,7 +72,8 @@ def bfgs(f, x0, max_iter=100, tol=1e-6):
 
         # Move to the next point.
         x = x_new
-    return x
+        xs = xs.at[i].set(x)
+    return x,xs
 
 
 if __name__ == "__main__":
@@ -82,6 +84,6 @@ if __name__ == "__main__":
 
     # Initial guess.
     x0 = jnp.array([-0.2, 0.0])
-    opt_x = bfgs(rosenbrock, x0)
+    opt_x,xs = bfgs(rosenbrock, x0)
 
     print("Optimized x:", opt_x)
