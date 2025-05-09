@@ -22,6 +22,9 @@ def backtracking_line_search(f, x, p, grad_x, alpha=1.0, rho=0.8, c=9e-1):
         alpha *= rho
     return alpha
 
+def zoom_line_search(f,x,p,grad_x, alpha=1., rho = 0.8,c =9e-1):
+    
+    
 
 def bfgs(f, x0, max_iter=100, tol=1e-15):
     """
