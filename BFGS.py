@@ -313,7 +313,7 @@ def lbfgs(f, x0, history_size=10, max_iter=100,zoom_method="strong_wolfe", tol=1
 
 
 
-def newton(f, x0, max_iter=100, tol=1e-15):
+def newton(f, x0,  max_iter=100, tol=1e-15):
     """
     Newton's method for optimization.
     """

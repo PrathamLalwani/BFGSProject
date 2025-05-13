@@ -6,7 +6,7 @@ def f1(x):
     """
     Adjiman Function
     """
-    return jnp.cos(x[0]) * jnp.sin(x[1]) - (x[0] / (x[1] ** 2 + 1))
+    return (jnp.cos(x[0]) * jnp.sin(x[1])) - (x[0] / (x[1] ** 2 + 1))
 
 
 def f2(x):
