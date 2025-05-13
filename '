@@ -1,0 +1,183 @@
+import jax
+import jax.numpy as jnp
+
+from test_functions import *
+
+jax.config.update("jax_enable_x64", True)
+
+
+def backtracking_line_search(phi, phi_0, grad_phi_0, a_max, alpha=1.0, rho=0.8, c=9e-1):
+    """
+    Simple backtracking line search using the Armijo condition.
+
+    phi: objective function.
+    x: current point.
+    p: search direction.
+    grad_x: gradient at x.
+    alpha: initial step size.
+    rho: factor to decrease alpha.
+    c: Armijo constant.
+    """
+    a = a_max
+    while phi(a) > phi_0 + c * a * grad_phi_0:
+        a *= rho
+    return a
+
+
+def line_search(
+    phi,
+    phi_0,
+    grad_phi_0,
+    a_max,
+    zoom_method="strong_wolfe",
+    c1=1e-4,
+    c2=9e-1,
+    max_iter=10,
+):
+    a = a_max / 2.0
+    a_prev = 0.0
+    i = 0
+    phi_curr = phi_0
+    zoom = None
+    if zoom_method == "strong_wolfe":
+        zoom = lambda al, au: interpolation_line_search(
+            phi, phi_0, grad_phi_0, al, au, c1=c1, c2=c2, max_iter=10
+        )
+    elif zoom_method == "armijo":
+        return backtracking_line_search(
+            phi, phi_0, grad_phi_0, a_max=a_max, rho=0.5, c=9e-1
+        )
+    else:
+        raise ValueError("Zoom method not implemented")
+
+    while i < max_iter:
+        phi_prev = phi_curr
+        phi_curr = phi(a)
+        if phi_curr > phi_0 + c1 * a * grad_phi_0 or (phi_curr >= phi_prev and i > 0):
+            return zoom(a_prev, a)
+        grad_phi_curr = jax.grad(phi)(a)
+        if jnp.abs(grad_phi_curr) <= -1 * c2 * grad_phi_0:
+            return a
+        if grad_phi_curr >= 0:
+            return zoom(a_prev, a)
+        a_prev = a
+        a = (a + a_max) / 2.0
+        i += 1
+    print("Line Search Failed")
+    return 0.0
+
+
+def interpolation_line_search(
+    phi, phi_0, grad_phi_0, al, au, c1=1e-4, c2=9e-1, max_iter=20
+):
+    i = 0
+    a = al
+    while i < max_iter:
+        if jnp.abs(al) <= 1e-14:
+            if (2.0 * (phi(au) - phi_0 - au * grad_phi_0)) > 1e-9:
+                a = (-grad_phi_0 * au**2) / (2.0 * (phi(au) - phi_0 - au * grad_phi_0))
+            else:
+                a = (al + au) / 2.0
+        else:
+            coeff = (1.0 / (al**2 * au**2 * (au - al))) * (
+                jnp.array([[al**2, -(au**2)], [-(al**3), au**3]])
+                @ jnp.array(
+                    [
+                        phi(au) - phi_0 - au * grad_phi_0,
+                        phi(al) - phi_0 - al * grad_phi_0,
+                    ]
+                )
+            )
+            a_poly, b_poly = coeff[0], coeff[1]
+            if jnp.abs(a_poly) < 1e-14 or ((b_poly**2 - 3 * a_poly * grad_phi_0) < 0):
+                a = (al + au) / 2.0
+            else:
+                a = (-b_poly + jnp.sqrt(b_poly**2 - 3 * a_poly * grad_phi_0)) / (
+                    3 * a_poly
+                )
+        curr_phi = phi(a)
+        if curr_phi > phi_0 + c1 * a * grad_phi_0 or curr_phi >= phi(al):
+            au = a
+        else:
+            grad_phi_curr = jax.grad(phi)(a)
+            if jnp.abs(grad_phi_curr) <= -1 * c2 * grad_phi_0:
+                return a
+            if grad_phi_curr * (au - al) >= 0:
+                au = al
+            al = a
+            print(al, au, grad_phi_curr)
+        i += 1
+    return al
+
+
+def bfgs(f, x0, zoom_method="strong_wolfe", max_iter=100, tol=1e-15):
+    """
+    BFGS optimization using JAX.
+
+    f: function to minimize.
+    x0: initial point as a JAX array.
+    max_iter: maximum iterations.
+    tol: tolerance for stopping criterion (based on gradient norm).
+    """
+    # Current point and dimension.
+    x = x0
+    n = x0.shape[0]
+    # Initialize the inverse Hessian approximation as the identity matrix.
+    Hinv = jnp.eye(n)
+    # Function to compute the gradient using automatic differentiation.
+    grad_f = jax.grad(f)
+    xs = [x0]
+    i = 0
+    while jnp.abs(f(x)) > tol and i < max_iter:
+        g = grad_f(x)
+        # Check for convergence.
+        if jnp.linalg.norm(g) < tol:
+            print(f"Convergence reached at iteration {i}")
+            break
+
+        # Compute the search direction.
+        p = -Hinv @ g
+        # Perform a line search to determine step size.
+        phi = lambda alpha: f(x + alpha * p)
+        grad_phi_0 = jnp.dot(g, p)
+        alpha = line_search(phi, phi(0.0), grad_phi_0, 1.0, zoom_method=zoom_method)
+        # Update step.
+        s = alpha * p
+        x_new = x + s
+        y = grad_f(x_new) - g
+
+        # Compute scaling factor.
+        rho = 1.0 / jnp.dot(y, s)
+
+        # BFGS Hessian update.
+        Hinv = (
+            Hinv
+            + ((jnp.dot(s, y) + y.T @ (Hinv @ y)) * (jnp.outer(s, s)))
+            / (jnp.dot(s, y) ** 2)
+            - (jnp.outer(Hinv @ y, s) + jnp.outer(s, jnp.dot(y.T, Hinv)))
+            / (jnp.dot(s, y))
+        )
+
+        # Move to the next point.
+        x = x_new
+        xs.append(x)
+        i += 1
+    return x, jnp.array(xs)
+
+
+def lbfgs(f, x0, history_size=10, max_iter=100, tol=1e-15):
+    pass
+
+
+if __name__ == "__main__":
+    # Example usage with the Rosenbrock function.
+    def rosenbrock(x):
+        """The Rosenbrock function in 2D."""
+        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2
+
+    f = f11
+    # Initial guess.
+    x0 = jnp.array([0.0, 0.0])
+    opt_x, xs = bfgs(f, x0, tol=1e-6)
+
+    print("Optimized x:", opt_x, f(opt_x))

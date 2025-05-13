@@ -1,13 +1,16 @@
 \documentclass[12pt]{report}
 
+\usepackage{tikz}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 
 % Core math & theorem environments
 \usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{bm}
 \newtheorem{lemma}{Lemma}[section]
 \newtheorem{proposition}[lemma]{Proposition}
-
+\newtheorem{theorem}{Theorem}
+\usetikzlibrary{decorations.pathreplacing,arrows.meta,calc}
 % Better tables
 \usepackage{booktabs}
 
@@ -34,13 +37,12 @@
 \setlength{\parindent}{0pt}
 \date{}
 \pagestyle{fancyplain}
-
 \begin{document}
 \begin{titlepage}
 	\topskip0pt
 	\centering
 	\vspace*{\fill}
-	{\bf \LARGE Your project name here\\}
+	{\bf \LARGE BFGS : An Optimzation Algorithm\\}
 	\vspace{1cm}
 	{\Large University of California, Merced\\}
 	\vspace{0.5cm}
@@ -48,7 +50,7 @@
 	\vspace{1.5cm}
 	{\bf \Large Math 231 Final Project Report\\}
 	\vspace{1.5cm}
-	{\bf \Large Your name\\}
+	{\bf \Large Pratham Lalwani\\}
 	\vspace{2cm}
 	{\large May 13, 2025\\}
 	\vspace*{\fill}
@@ -65,7 +67,6 @@
 
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-
 A short abstract about your topic (less than half a page, aim for less than 8 sentences). Introduce minimal background and state the problem you are solving and techniques involved to get your main result. (I recommend writing this last, i.e. after you have finished the main result sections of Chapter 2.)
 
 \tableofcontents
@@ -84,13 +85,12 @@ A short abstract about your topic (less than half a page, aim for less than 8 se
 % Chapter 1: Introduction
 % -------------------------
 \chapter{Introduction}
-Optimization plays a central role in scientific computing, machine learning, and engineering design.  In particular, quasi‐Newton methods such as BFGS—named after Broyden, Fletcher, Goldfarb and Shanno—offer superlinear convergence at modest per‐iteration cost.  Beyond pure mathematics, BFGS is widely used for calibrating large‐scale models in physics, economics, and deep learning.
-
-A key ingredient in practice is a line search that satisfies the \emph{strong Wolfe conditions}, ensuring both sufficient decrease and curvature control.  In this report we (i) review the BFGS update, (ii) prove that the Broyden family of updates preserves positive definiteness under these line‐search rules, and (iii) establish the \emph{sufficient decrease} property needed for global convergence.
-
-We conclude this chapter with an outline of the report.  In Chapter 2 we introduce necessary background on unconstrained optimization and line‐search theory (\S2.1).  In \S2.2 we derive the BFGS algorithm, prove the Broyden update lemma, and show the sufficient‐decrease result.  Section 2.3 presents numerical experiments across 50 standard test problems to illustrate convergence behavior.  Finally, Chapter 3 summarizes our findings and suggests directions for future work.
+Optimization problems are ubiqutous, from solving linear problems to large scale physical simulations require minimizing a function. Due to the wide range of optmization problems available a good optmization algorithm is general, makes minimal assumptions and is fast. One such algorithm is BFGS (named after Broyden, Fletcher, Goldfarb and Shanno), providing super linear convergence even for large simulations.
+BFGS is one of the most widely used algorithms for optmization it works by approximating the hessian of the objective function which we want to minimize and applying symmetric updates such that it's inverse of the hessian can be computed in $\mathcal{O}(n^2)$ operations. Compared to Newton's method which usually has a dense linear system to solve, requiring $\mathcal O(n^3)$ operations to solve.
+Eventhough BFGS is more efficient than Newton's method, $O(n^2)$ cost per iteration is a lot. In order to get the most out of each iteration we perform a line search along a proposed search direction to minimize the function along the search direction.
 
 % -------------------------
+
 % Chapter 2: Main Results
 % -------------------------
 \chapter{Main Results}
@@ -103,7 +103,7 @@ We consider the unconstrained optimization problem
 where $f:\mathbb{R}^n\to\mathbb{R}$ is twice continuously differentiable and bounded below.
 A line‐search method generates iterates
 \[
-	x_{k+1} = x_k + \alpha_k p_k,
+	\bm x_{k+1} = \bm x_k + \alpha_k \bm p_k,
 \]
 where $p_k$ is a search direction (e.g.\ a quasi‐Newton direction) and $\alpha_k>0$ is chosen to satisfy the \emph{strong Wolfe conditions}:
 \begin{align}
@@ -121,6 +121,17 @@ The BFGS update constructs an approximation $B_k \approx \nabla^2 f(x_k)^{-1}$ v
 	\Bigl(I - \frac{y_k s_k^T}{y_k^T s_k}\Bigr) + \frac{s_k s_k^T}{y_k^T s_k}.
 \]
 
+\begin{figure}[htpb]
+	\centering
+	\includegraphics[width=0.8\textwidth]{./drawing.png}
+	\caption{Acceptable regions for the Strong Wolfe conditions}
+	\label{fig:}
+\end{figure}
+\begin{theorem}
+	\[
+		\nabla f(x +p) = \nabla f(x) + \int_0^1 \nabla^2 f(x+\alpha p) p dt
+		.\]
+\end{theorem}
 \section{Theoretical Results}
 \subsection{Broyden Update Lemma}
 \begin{lemma}
@@ -129,6 +140,106 @@ The BFGS update constructs an approximation $B_k \approx \nabla^2 f(x_k)^{-1}$ v
 \begin{proof}
 	By the curvature condition $y_k^T p_k = \nabla f(x_{k+1})^T p_k - \nabla f(x_k)^T p_k \ge (1-c_2)\nabla f(x_k)^T p_k>0$.  Positivity of $y_k^Ts_k$ follows since $p_k=-B_k\nabla f(x_k)$.  Standard algebraic manipulation of the rank‐two update then shows $B_{k+1}>0$ .
 \end{proof}
+BFGS Update Derivation\\
+We would like update the Hessian such that we have to make briedered small updates to the matrix.\\
+\begin{gather*}
+	\min \| H-H_{k}\|_W^{2}\quad  H \in \mathbb{R}^{n \times n} \quad \text{subject to constraint,} \\
+	H y_{k}=\bm{s}_k \quad \text { and } H^{\top}=H
+	.\end{gather*}
+
+
+The norm is the weighted Frobenius norm and $W$ is a symmetric Positive Definite matrix.
+
+As $W$ is SPD we have a matrix $W^{1/2}$ such that:\\
+$$
+	W^{1 / 2} W^{1 / 2}=W
+$$
+
+Therefore the weighted Frobenius norm is,
+
+$$
+	\begin{aligned}
+		\left\|H-H_{k}\right\|_{W}^{2} & =\left\|W^{1 / 2}\left(H-H_{k}\right) W^{1 / 2}\right\|_{ F}^{2} \\
+	\end{aligned}
+$$
+
+We define Lagrange Multiplier Problem as follows:
+
+\begin{align}
+	 & \mathcal L(H, \lambda, \theta)=\left\|H-H_{k}\right\|_{W}^{2}+\operatorname{tr}\left(\lambda^{\top}\left(H y_{k}-\bm{s}_k\right)\right) +\left(H^{\top}-H\right) \Theta
+\end{align}
+Taking the respective partials,
+\begin{align*}
+	 & \frac{\partial\mathcal L}{\partial \bm{\lambda}}=H \bm{y}_k-\bm{s}_{k}=0 \\
+	 & \frac{\partial\mathcal L}{\partial \Theta}= O \implies H^{\top}=H \\
+	 & \frac{\partial\mathcal L}{\partial H}=W\left(H-H_{k}\right) W+\bm{\lambda} \bm{y}_k^{\top}+\Theta-\Theta^{\top}=0 \\
+	 & \therefore W H_{W} W=W H_{k} W+ \bm{\lambda} \bm{y}_k^{\top}+\Theta-\Theta^{\top}
+	.\end{align*}
+Applying transpose on both sides
+$$
+	W H_{k} W=W H_{k} W+\bm{y}_k^{\top} \bm{\lambda}^{\top}-\left(\Theta-\Theta^{\top}\right)-(2)
+$$
+
+Subtracting (1) from $(1)$ :
+\begin{align*}
+	 & 0=\left(\bm \lambda  \bm{y}_k^{\top}- \bm y_{k} \bm \lambda^{\top}\right)+2\left(\Theta-\Theta^{\top}\right) \\
+	 & \frac{1}{2}\left(\bm y_{k} \bm \lambda^{\top}-\bm \lambda \bm y_{k}^{\top}\right)=\Theta-\Theta^{\top} \tag{3}
+\end{align*}
+Using (3) in (1)
+\begin{align*}
+	W H_{k} W=W H_{k} W+\frac{1}{2}\left(\bm{\lambda} y_{k}^{\top}+y_{k} \bm{\lambda}^{\top}\right) \\
+	.\end{align*}
+$$
+	H_{k}=H_{k}+\frac{1}{2} W^{-1}\left(\bm{\lambda}_{\bm{\lambda}} \bm{y}_k^{\top}+\bm{y}_{k} \bm \lambda^{\top}\right) W^{-1}
+$$
+
+We also have
+
+$$
+	H{\bm{y}_k}=\bm{s}_{k}
+$$
+
+
+We also didn't choose a specific matrix $W$, one good choice is $W \bm{s}_{k}=\bm{y}_k$. Which results in the BFGS update formula.
+
+
+$$
+	\begin{aligned}
+		 & H_{k} \bm{y}_k+\frac{1}{2} W^{-1}\left(\bm{\lambda} \bm{y}_{k}^{\top}+\bm{y}_{k} \bm{\lambda}^{\top}\right) W^{-1} \bm{y}_{k}=\bm{s}_{k}                           \\
+		 & H_{k} \bm{y}_k+\frac{1}{2} W^{-1} \bm{\lambda} \bm{y}_{k}^{\top} W^{-1} \bm{y}_{k}+\frac{1}{2} W^{-1} \bm{y}_{k} \bm{\lambda}^{\top} W^{-1} \bm{y}_{k} =\bm{s}_{k}
+	\end{aligned}
+$$
+
+$$
+	\begin{aligned}
+		 & W H_{k} \bm{s}_{k}+\frac{1}{2}\left(\bm{\lambda} \bm{y}_k^{\top}+\bm{y}_{k}^{\top} \bm{\lambda}^{\top}\right) W^{-1} \bm{y}_{k}=W \bm{s}_{k}                                 \\
+		 & \quad \frac{1}{2}\left(\bm{\lambda} \bm{y}_k W^{-1} \bm{y}_{k}+\bm{y}_{k} \bm{\lambda}^{\top} W^{-1} \bm{y}_{k}\right)=W\left(\bm{s}_{k}-H_{k} \overrightarrow{g_{k}}\right) \\
+		 & \bm{\lambda}=\frac{2 W\left(\bm{s}_{k}-H_{k} \bm{y}_k\right)-\bm{y}_{k} \bm{\lambda}^{\top} W^{-1} \bm{y}_{k}}{\bm{y}_{k} W^{-1} {\bm y_{k}}}
+	\end{aligned}
+$$
+Multiplying both sides by $\bm{y}_k^{\top} W^{-1}$ and applying transpose.
+$$
+	\begin{aligned}
+		\bm{\lambda}^{\top} W^{-1} \bm{y}_k & =
+		2\left(\frac{(\bm{y}_{k}^{\top} \bm{s}_k
+		-\bm y_{k}^{\top}H_k \bm y_{k})
+		- \left(\bm{y}_{k}^{\top} W^{-1} \bm{y}_{k}\right)
+		\left(\bm{\lambda}^{\top} W^{-1} \bm{y}_{k}\right)}{\bm{y}_k^{\top} W^{-1} y_{k}                                                                                                          }\right) \\
+	\end{aligned}
+$$
+
+$$
+	\begin{aligned}
+		\therefore \bm{\lambda}                    & =\frac{2 W\left(\bm{s}_{k}-H_{k} \bm{y}_k\right)}{\bm{y}_{k}^{\top} W^{-1} \bm{y}_{k}}-\frac{\bm{y}_{k}\left(\bm y_{k}^{\top} {\bm s}_{k} - \bm{y}_{k}^{\top} H_{k} \bm{y}_{k} \right)}{\left(\bm{y}_{k}^{\top} W^{-1} \bm{y}_{k}\right)^{2}}                                                                \\
+		\text { with } W \overrightarrow{\bm{s}_k} & = \bm y_{k} \implies {\bm s_{k}}=W^{-1} \cdot \bm{y}_k                                                                                                                                                                                                                                                       \\
+		\bm{\lambda}                               & =\frac{2 W\left({\bm{s}_k}-H_{k} \bm{y}_k\right)}{y_{k}^{\top} s_{k}}-\frac{\bm{y}_{k}\left(y_{k}^{\top} s_{k}-\bm{y}_{k}^{\top} H_{k} \bm{y}_{k}\right)}{\left(y_{k}^{\top} s_{k}\right)^{2}}                                                                                                               \\
+		H                                          & =  H_{k}+\frac{1}{2} W^{-1} \left(\left(\frac{2 W\left(\bm{s}_k-H_{k} \bm{y}_k\right)}{\bm y_{k}^{\top} \bm s_{k}}\right) \bm y_{k}^{\top}- \bm{y}_{k}\bm{y}_k^{\top}\frac{\left(\bm y_{k}^{\top} \bm s_{k}-\bm y_{k}^{\top} H_{k}\right)}{\left(\bm y_{k}^{\top}\bm s_{k}\right)^{2}}               \right. \\
+		                                           & \left.+\frac{2 \bm y_{k}\left(\bm{s}_k-H_{k} \bm y_{k}\right)^{\top} W}{\bm y_{k}^{\top} \bm s_{k}}-\bm{y}_k \bm{y}_{k}^{\top}\left(\frac{\bm{y}_{k}^{\top} \bm s_{k}-\bm{y}_{k}^{\top} H_{k} \bm{y}_{k}}{\left(\bm{y}_{k}^{\top} \bm{s}_{k}\right)^{2}}\right)\right){W^{-1}}                               \\
+		                                           & H=H_{k}+ \frac{\left(\bm{s}_k-H_{k} \bm{y}_k\right) \bm{s}_{k}^{\top}}{\bm{y}_{k}^{\top} \bm s_{k}}-\frac{\bm s_{k} \bm s_{k}^{\top}\left(\bm y_{k}^{\top} \bm s_{k}-\bm y_{k}^{\top} H_{k} \bm y_{k}\right)}{\left(\bm y_{k}^{\top}  \bm s_{k}\right)^{2}}
+		+\frac{\bm{s}_k\left(\bm s_{k}-H_{k} \bm y_{k}\right)^{\top}}{\bm y_{k}^{\top} \bm s_{k}}
+	\end{aligned}
+$$
+We leave it here because this is the efficient way to compute it.
 
 \subsection{Sufficient‐Decrease Theory}
 \begin{proposition}
@@ -180,12 +291,15 @@ Future work includes extending these results to limited‐memory (L‐BFGS) vari
 % -------------------------
 \appendix
 
-\chapter{Proof Details}
-\label{app:proofs}
-Here we collect full expansions of the algebraic steps omitted in Lemma 2.1 and Proposition 2.2.
+\chapter*{Appendix}
+\addcontentsline{toc}{chapter}{\bf Appendix}
+\renewcommand{\thesection}{\Alph{section}}
 
-\chapter{Pseudocode of the BFGS Algorithm}
-\label{app:code}
+\section{Additional calculations or proof of lemmas}
+
+Here we collect full expansions of the algebraic steps omitted in Lemma 2.1 and Proposition 2.2.
+\section{Pseudocode of your algorithm}
+
 \begin{algorithm}[H]
 	\caption{BFGS with Strong Wolfe Line Search}
 	\begin{algorithmic}[1]
@@ -200,15 +314,6 @@ Here we collect full expansions of the algebraic steps omitted in Lemma 2.1 and
 		\State \textbf{Output:} Approximate minimizer $x_{k+1}$
 	\end{algorithmic}
 \end{algorithm}
-\appendix
-\chapter*{Appendix}
-\addcontentsline{toc}{chapter}{\bf Appendix}
-\renewcommand{\thesection}{\Alph{section}}
-
-\section{Additional calculations or proof of lemmas}
-
-\section{Pseudocode of your algorithm}
-
 \bibliographystyle{plain}
 \bibliography{refs}
 \addcontentsline{toc}{chapter}{Bibliography}

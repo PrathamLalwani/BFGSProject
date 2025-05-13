@@ -7,12 +7,10 @@
 \contentsline {section}{\numberline {2.1}Background}{2}{section.2.1}%
 \contentsline {section}{\numberline {2.2}Theoretical Results}{2}{section.2.2}%
 \contentsline {subsection}{\numberline {2.2.1}Broyden Update Lemma}{2}{subsection.2.2.1}%
-\contentsline {subsection}{\numberline {2.2.2}Sufficient‐Decrease Theory}{2}{subsection.2.2.2}%
-\contentsline {section}{\numberline {2.3}Numerical Results}{3}{section.2.3}%
-\contentsline {chapter}{\numberline {3}Conclusion}{4}{chapter.3}%
-\contentsline {chapter}{\numberline {A}Proof Details}{5}{appendix.A}%
-\contentsline {chapter}{\numberline {B}Pseudocode of the BFGS Algorithm}{6}{appendix.B}%
-\contentsline {chapter}{\bf Appendix}{7}{appendix*.6}%
+\contentsline {subsection}{\numberline {2.2.2}Sufficient‐Decrease Theory}{5}{subsection.2.2.2}%
+\contentsline {section}{\numberline {2.3}Numerical Results}{5}{section.2.3}%
+\contentsline {chapter}{\numberline {3}Conclusion}{6}{chapter.3}%
+\contentsline {chapter}{\bf Appendix}{7}{appendix*.9}%
 \contentsline {section}{\numberline {A}Additional calculations or proof of lemmas}{7}{section.Alph0.1}%
 \contentsline {section}{\numberline {B}Pseudocode of your algorithm}{7}{section.Alph0.2}%
-\contentsline {chapter}{Bibliography}{8}{appendix*.7}%
+\contentsline {chapter}{Bibliography}{8}{appendix*.10}%
