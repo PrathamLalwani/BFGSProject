@@ -146,22 +146,25 @@ def interpolation_line_search(
         if jnp.abs(al) <= 1e-14:
             a = (-grad_phi_0 * au**2) / (2.0 * (phi(au) - phi_0 - au * grad_phi_0))
         else:
-            coeff = (1.0 / (al**2 * au**2 * (au - al))) * (
-                jnp.array([[al**2, -(au**2)], [-(al**3), au**3]])
-                @ jnp.array(
-                    [
-                        phi(au) - phi_0 - au * grad_phi_0,
-                        phi(al) - phi_0 - al * grad_phi_0,
-                    ]
-                )
-            )
-            a_poly, b_poly = coeff[0], coeff[1]
-            if jnp.abs(a_poly) < 1e-14 or ((b_poly**2 - 3 * a_poly * grad_phi_0) < 0):
-                a = (al + au) / 2.0
+            if jnp.linalg.norm(au - al) < 1e-14:
+                a = (al + au) / 2.0 
             else:
-                a = (-b_poly + jnp.sqrt(b_poly**2 - 3 * a_poly * grad_phi_0)) / (
-                    3 * a_poly
+                coeff = (1.0 / (al**2 * au**2 * (au - al))) * (
+                    jnp.array([[al**2, -(au**2)], [-(al**3), au**3]])
+                    @ jnp.array(
+                        [
+                            phi(au) - phi_0 - au * grad_phi_0,
+                            phi(al) - phi_0 - al * grad_phi_0,
+                        ]
+                    )
                 )
+                a_poly, b_poly = coeff[0], coeff[1]
+                if jnp.abs(a_poly) < 1e-14 or ((b_poly**2 - 3 * a_poly * grad_phi_0) < 0):
+                    a = (al + au) / 2.0
+                else:
+                    a = (-b_poly + jnp.sqrt(b_poly**2 - 3 * a_poly * grad_phi_0)) / (
+                        3 * a_poly
+                    )
         if jnp.abs(a - a_prev) < 1e-10:
             a = a_prev / 2.0
         curr_phi = phi(a)
@@ -212,9 +215,8 @@ def bfgs(
         s = alpha * p
         x_new = x + s
         y = grad_f(x_new) - g
-
         # Compute scaling factor.
-        rho = 1.0 / jnp.dot(y, s)
+        rho =  jnp.dot(y, s)
 
         # BFGS Hessian update.
         Hinv = (

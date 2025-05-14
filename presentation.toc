@@ -1,6 +1,0 @@
-\beamer@sectionintoc {1}{Background}{3}{0}{1}
-\beamer@sectionintoc {2}{Quasi-Newton Methods}{20}{0}{2}
-\beamer@sectionintoc {3}{Rosenbrock Example}{24}{0}{3}
-\beamer@sectionintoc {4}{Results}{27}{0}{4}
-\beamer@sectionintoc {5}{Convergence}{28}{0}{5}
-\beamer@sectionintoc {6}{Conclusion}{29}{0}{6}
