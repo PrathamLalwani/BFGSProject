@@ -1,4 +1,7 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {2.1}{\ignorespaces Summary of convergence across 50 test problems}}{5}{table.caption.8}%
+\contentsline {table}{\numberline {2.1}{\ignorespaces Final gradient norm of each method}}{9}{table.caption.9}%
+\contentsline {table}{\numberline {2.2}{\ignorespaces Time per iteration (in seconds)}}{9}{table.caption.10}%
+\contentsline {table}{\numberline {2.3}{\ignorespaces Number of Function Evaluations}}{9}{table.caption.11}%
+\contentsline {table}{\numberline {2.4}{\ignorespaces Number of Iterations}}{10}{table.caption.12}%
 \addvspace {10\p@ }

@@ -66,11 +66,9 @@ def line_search(
     return 0.0
 
 
-def gradient_descent(
-    f, x0,lr=0.001 , max_iter=1000,  tol=1e-15
-):
+def gradient_descent(f, x0, lr=0.001, max_iter=1000, tol=1e-15):
     """
-    Gradient descent optimization 
+    Gradient descent optimization
 
     f: function to minimize.
     x0: initial point as a JAX array.
@@ -97,9 +95,8 @@ def gradient_descent(
         print("Max iterations reached")
     return x, jnp.array(xs)
 
-def steepest_descent(
-    f, x0,  max_iter=1000,line_search_max_iter=20, tol=1e-15
-):
+
+def steepest_descent(f, x0, max_iter=1000, line_search_max_iter=20, tol=1e-15):
     """
     Steepest descent optimization.
 
@@ -122,7 +119,9 @@ def steepest_descent(
         # Perform a line search to determine step size.
         phi = lambda alpha: f(x + alpha * p)
         grad_phi_0 = jnp.dot(g, p)
-        alpha = line_search(phi, phi(0.0), grad_phi_0, 1.0,max_iter=line_search_max_iter)
+        alpha = line_search(
+            phi, phi(0.0), grad_phi_0, 1.0, max_iter=line_search_max_iter
+        )
         # Update step.
         s = alpha * p
         x_new = x + s
@@ -136,6 +135,7 @@ def steepest_descent(
         print("Max iterations reached")
     return x, jnp.array(xs)
 
+
 def interpolation_line_search(
     phi, phi_0, grad_phi_0, al, au, c1=1e-4, c2=9e-1, max_iter=30
 ):
@@ -147,7 +147,7 @@ def interpolation_line_search(
             a = (-grad_phi_0 * au**2) / (2.0 * (phi(au) - phi_0 - au * grad_phi_0))
         else:
             if jnp.linalg.norm(au - al) < 1e-14:
-                a = (al + au) / 2.0 
+                a = (al + au) / 2.0
             else:
                 coeff = (1.0 / (al**2 * au**2 * (au - al))) * (
                     jnp.array([[al**2, -(au**2)], [-(al**3), au**3]])
@@ -159,7 +159,9 @@ def interpolation_line_search(
                     )
                 )
                 a_poly, b_poly = coeff[0], coeff[1]
-                if jnp.abs(a_poly) < 1e-14 or ((b_poly**2 - 3 * a_poly * grad_phi_0) < 0):
+                if jnp.abs(a_poly) < 1e-14 or (
+                    (b_poly**2 - 3 * a_poly * grad_phi_0) < 0
+                ):
                     a = (al + au) / 2.0
                 else:
                     a = (-b_poly + jnp.sqrt(b_poly**2 - 3 * a_poly * grad_phi_0)) / (
@@ -185,7 +187,7 @@ def bfgs(
     f, x0, zoom_method="strong_wolfe", max_iter=100, line_search_max_iter=100, tol=1e-15
 ):
     """
-    BFGS optimization. 
+    BFGS optimization.
 
     f: function to minimize.
     x0: initial point as a JAX array.
@@ -216,15 +218,20 @@ def bfgs(
         x_new = x + s
         y = grad_f(x_new) - g
         # Compute scaling factor.
-        rho =  jnp.dot(y, s)
-
+        rho = jnp.dot(y, s)
+        rho = 1.0 / rho
         # BFGS Hessian update.
-        Hinv = (
-            Hinv
-            + ((jnp.dot(s, y) + y.T @ (Hinv @ y)) * (jnp.outer(s, s)))
-            / (jnp.dot(s, y) ** 2)
-            - (jnp.outer(Hinv @ y, s) + jnp.outer(s, jnp.dot(y.T, Hinv)))
-            / (jnp.dot(s, y))
+        # Hinv = (
+        #     Hinv
+        #     + ((jnp.dot(s, y) + y.T @ (Hinv @ y)) * (jnp.outer(s, s)))
+        #     / (jnp.dot(s, y) ** 2)
+        #     - (jnp.outer(Hinv @ y, s) + jnp.outer(s, jnp.dot(y.T, Hinv)))
+        #     / (jnp.dot(s, y))
+        # )
+        Hinv = Hinv - rho * (
+            jnp.outer(Hinv @ y, s)
+            + jnp.outer(s, jnp.dot(y.T, Hinv))
+            - (jnp.outer(s, s) * (1 + rho * (y.T @ Hinv @ y)))
         )
 
         # Move to the next point.
@@ -241,9 +248,9 @@ def bfgs(
     return x, jnp.array(xs)
 
 
-def lbfgs(f, x0, history_size=10, max_iter=100,zoom_method="strong_wolfe", tol=1e-15):
+def lbfgs(f, x0, history_size=10, max_iter=100, zoom_method="strong_wolfe", tol=1e-15):
     """
-    Limited-memory BFGS optimization. 
+    Limited-memory BFGS optimization.
 
     f: function to minimize.
     x0: initial point as a JAX array.
@@ -251,7 +258,7 @@ def lbfgs(f, x0, history_size=10, max_iter=100,zoom_method="strong_wolfe", tol=1
     max_iter: maximum iterations.
     tol: tolerance for stopping criterion (based on gradient norm).
     """
-    x= x0
+    x = x0
     n = x0.shape[0]
     # Function to compute the gradient using automatic differentiation.
     grad_f = jax.grad(f)
@@ -265,7 +272,7 @@ def lbfgs(f, x0, history_size=10, max_iter=100,zoom_method="strong_wolfe", tol=1
         # Compute the search direction.
         q = g
 
-        for i in range(len(s_list)): 
+        for i in range(len(s_list)):
             # alpha = jnp.dot(s, q) / jnp.dot(y, s)
             alpha_list[i] = jnp.dot(s_list[i], q) / jnp.dot(y_list[i], s_list[i])
             q -= alpha_list[i] * y_list[i]
@@ -275,11 +282,12 @@ def lbfgs(f, x0, history_size=10, max_iter=100,zoom_method="strong_wolfe", tol=1
         else:
             gamma = jnp.dot(y_list[-1], s_list[-1]) / jnp.dot(y_list[-1], y_list[-1])
 
-
         # gamma = jnp.dot(s_list[-1], y_list[-1])/ jnp.dot(y_list[-1], y_list[-1])
         H0 = gamma * jnp.eye(n)
         r = H0 @ q
-        for s,y,alpha in zip(reversed(s_list), reversed(y_list), reversed(alpha_list)):
+        for s, y, alpha in zip(
+            reversed(s_list), reversed(y_list), reversed(alpha_list)
+        ):
             beta = jnp.dot(y, r) / jnp.dot(y, s)
             r += (alpha - beta) * s
         p = -r
@@ -287,7 +295,7 @@ def lbfgs(f, x0, history_size=10, max_iter=100,zoom_method="strong_wolfe", tol=1
         # Perform a line search to determine step size.
         phi = lambda alpha: f(x + alpha * p)
         grad_phi_0 = jnp.dot(g, p)
-        alpha = line_search(phi, phi(0.0), grad_phi_0, 1.0,zoom_method=zoom_method)
+        alpha = line_search(phi, phi(0.0), grad_phi_0, 1.0, zoom_method=zoom_method)
         # Update step.
         s = alpha * p
         x_new = x + s
@@ -313,9 +321,7 @@ def lbfgs(f, x0, history_size=10, max_iter=100,zoom_method="strong_wolfe", tol=1
     return x, jnp.array(xs)
 
 
-
-
-def newton(f, x0,  max_iter=100, tol=1e-15):
+def newton(f, x0, max_iter=100, tol=1e-15):
     """
     Newton's method for optimization.
     """
@@ -328,7 +334,7 @@ def newton(f, x0,  max_iter=100, tol=1e-15):
     r = jnp.inf
     g = grad_f(x0)
 
-    while jnp.abs(r) > tol and jnp.linalg.norm(g) > tol and i < max_iter:
+    while jnp.linalg.norm(g) > tol and i < max_iter:
 
         # Compute the search direction.
         p = -jnp.linalg.solve(hess_f(x), g)
@@ -359,7 +365,7 @@ if __name__ == "__main__":
 
     f = rosenbrock
     # Initial guess.
-    x0 = jnp.array([-.5, -.5])
+    x0 = jnp.array([-0.5, -0.5])
     # opt_x, xs = gradient_descent(f, x0, max_iter=10000, tol=1e-14)
     # opt_x, xs = lbfgs(
     #     f,

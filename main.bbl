@@ -1,3 +1,8 @@
-\begin{thebibliography}{}
+\begin{thebibliography}{1}
+
+\bibitem{nocedal}
+Jorge Nocedal and Stephen~J. Wright.
+\newblock {\em Numerical Optimization}.
+\newblock Springer Series in Operations Research and Financial Engineering. Springer, 2nd edition, 2006.
 
 \end{thebibliography}
